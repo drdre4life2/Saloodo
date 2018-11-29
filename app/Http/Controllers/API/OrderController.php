@@ -22,7 +22,7 @@ class OrderController extends BaseController
      */
     public function index()
     {
-        $products = Product::all();
+        $products = Product::select('name','price')->get();
 
 
         return $this->sendResponse($products->toArray(), 'Products retrieved successfully.');
@@ -42,6 +42,7 @@ class OrderController extends BaseController
         $validator = Validator::make($items, [
             'product_id' => 'required'
         ]);
+
         $customer_id = Auth::user()->id;
 
         if ($validator->fails()) {
@@ -57,13 +58,14 @@ class OrderController extends BaseController
         $order_data = array(
             'order_id' => $order_id
         );
+
         $product_id = $items['product_id'];
         $orderitem = new Orderitem();
         $orderitem->order_id = $order_id;
         $orderitem->product_id = $items['product_id'];
         $orderitem->save();
-        $ordered_products = DB::select("SELECT name, price FROM products WHERE id = '$product_id'");
-
+        $ordered_products = DB::select("SELECT name, sum(price) as total FROM products WHERE id = '$product_id'");
+        
         return $this->sendResponse($ordered_products, 'Order was created successfully.');
     }
 
@@ -76,7 +78,10 @@ class OrderController extends BaseController
      */
     public function show($id)
     {
-        $ordered_products = DB::select("SELECT name, price FROM products WHERE id = '$product_id'");
+        
+        $ordered_query = "SELECT products.name, products.price, orderitems.product_id, orderitems.order_id FROM products,orderitems
+        WHERE orderitems.product_id = products.id AND orderitems.order_id = 18";
+        $ordered_products = DB::select($ordered_query);
         $orders_query;
 
         if (is_null($product)) {
@@ -86,7 +91,6 @@ class OrderController extends BaseController
 
         return $this->sendResponse($product->toArray(), 'Product retrieved successfully.');
     }
-
 
     /**
      * Update the specified resource in storage.

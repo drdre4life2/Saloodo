@@ -21,7 +21,7 @@ class ProductController extends BaseController
      */
     public function index()
     {
-        $products = Product::paginate(5);
+        $products = Product::select('name', 'price')->paginate(5);
         return $this->sendResponse($products->toArray(), 'Products retrieved successfully.');
     }
 
